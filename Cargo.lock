@@ -1064,6 +1064,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cord-parachain"
+version = "0.9.23"
+dependencies = [
+ "derive_more",
+ "frame-support",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "polkadot-core-primitives",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "cord-performance-test"
 version = "0.9.23"
 dependencies = [
@@ -1210,6 +1226,7 @@ dependencies = [
  "beefy-gadget",
  "beefy-primitives",
  "cord-client",
+ "cord-parachain",
  "cord-rpc",
  "cord-runtime",
  "cord-runtime-constants",
@@ -1254,7 +1271,6 @@ dependencies = [
  "polkadot-node-subsystem-types",
  "polkadot-node-subsystem-util",
  "polkadot-overseer",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
  "polkadot-primitives",
  "polkadot-runtime-parachains",
  "polkadot-statement-distribution",
@@ -6111,7 +6127,7 @@ dependencies = [
  "polkadot-node-primitives",
  "polkadot-node-subsystem",
  "polkadot-node-subsystem-util",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "polkadot-primitives",
  "sp-maybe-compressed-blob",
  "tracing-gum",
@@ -6218,7 +6234,7 @@ dependencies = [
  "pin-project 1.0.10",
  "polkadot-core-primitives",
  "polkadot-node-subsystem-util",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "rand 0.8.5",
  "sc-executor",
  "sc-executor-common",
@@ -6333,7 +6349,7 @@ dependencies = [
  "bounded-vec",
  "futures 0.3.21",
  "parity-scale-codec",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "polkadot-primitives",
  "schnorrkel",
  "serde",
@@ -6452,22 +6468,6 @@ dependencies = [
 [[package]]
 name = "polkadot-parachain"
 version = "0.9.23"
-dependencies = [
- "derive_more",
- "frame-support",
- "parity-scale-codec",
- "parity-util-mem",
- "polkadot-core-primitives",
- "scale-info",
- "serde",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "polkadot-parachain"
-version = "0.9.23"
 source = "git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23#a7e188cd9665c735f4b9d5a58cdbc4dd1850eae0"
 dependencies = [
  "derive_more",
@@ -6493,7 +6493,7 @@ dependencies = [
  "parity-scale-codec",
  "parity-util-mem",
  "polkadot-core-primitives",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "scale-info",
  "serde",
  "sp-api",
@@ -6786,7 +6786,7 @@ dependencies = [
  "polkadot-node-subsystem-types",
  "polkadot-node-subsystem-util",
  "polkadot-overseer",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "polkadot-primitives",
  "polkadot-rpc",
  "polkadot-runtime",
@@ -6926,7 +6926,7 @@ dependencies = [
  "pallet-vesting",
  "pallet-xcm",
  "parity-scale-codec",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "polkadot-primitives",
  "polkadot-runtime-common",
  "polkadot-runtime-parachains",
@@ -6973,7 +6973,7 @@ dependencies = [
  "polkadot-node-primitives",
  "polkadot-node-subsystem",
  "polkadot-overseer",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "polkadot-primitives",
  "polkadot-rpc",
  "polkadot-runtime-common",
@@ -10316,9 +10316,9 @@ checksum = "507e9898683b6c43a9aa55b64259b721b52ba226e0f3779137e50ad114a4c90b"
 name = "test-parachain-adder"
 version = "0.9.23"
 dependencies = [
+ "cord-parachain",
  "dlmalloc",
  "parity-scale-codec",
- "polkadot-parachain 0.9.23",
  "sp-io",
  "sp-std",
  "substrate-wasm-builder",
@@ -10331,6 +10331,7 @@ version = "0.9.23"
 dependencies = [
  "clap",
  "cord-cli",
+ "cord-parachain",
  "cord-service",
  "futures 0.3.21",
  "futures-timer",
@@ -10339,7 +10340,6 @@ dependencies = [
  "polkadot-node-core-pvf",
  "polkadot-node-primitives",
  "polkadot-node-subsystem",
- "polkadot-parachain 0.9.23",
  "polkadot-primitives",
  "polkadot-test-service",
  "sc-cli",
@@ -10362,10 +10362,10 @@ dependencies = [
 name = "test-parachain-undying"
 version = "0.9.23"
 dependencies = [
+ "cord-parachain",
  "dlmalloc",
  "log",
  "parity-scale-codec",
- "polkadot-parachain 0.9.23",
  "sp-io",
  "sp-std",
  "substrate-wasm-builder",
@@ -10378,6 +10378,7 @@ version = "0.9.23"
 dependencies = [
  "clap",
  "cord-cli",
+ "cord-parachain",
  "cord-service",
  "futures 0.3.21",
  "futures-timer",
@@ -10386,7 +10387,6 @@ dependencies = [
  "polkadot-node-core-pvf",
  "polkadot-node-primitives",
  "polkadot-node-subsystem",
- "polkadot-parachain 0.9.23",
  "polkadot-primitives",
  "polkadot-test-service",
  "sc-cli",
@@ -11617,7 +11617,7 @@ dependencies = [
  "log",
  "pallet-transaction-payment",
  "parity-scale-codec",
- "polkadot-parachain 0.9.23 (git+https://github.com/dhiway/polkadot?branch=polkadot-v0.9.23)",
+ "polkadot-parachain",
  "scale-info",
  "sp-arithmetic",
  "sp-io",
