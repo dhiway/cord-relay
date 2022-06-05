@@ -1,0 +1,21 @@
+[package]
+name = "cord-performance-test"
+version = "0.9.23"
+authors = ['Dhiway Networks <info@dhiway.com>']
+edition = '2021'
+
+[dependencies]
+thiserror = "1.0.31"
+quote = "1.0.18"
+env_logger = "0.9"
+log = "0.4"
+
+polkadot-node-core-pvf = {  git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
+polkadot-erasure-coding = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
+polkadot-node-primitives = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23"}
+
+cord-runtime = { path = "../../runtime" }
+
+[[bin]]
+name = "gen-ref-constants"
+path = "src/gen_ref_constants.rs"

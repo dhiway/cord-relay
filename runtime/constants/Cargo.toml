@@ -1,0 +1,19 @@
+[package]
+name = "cord-runtime-constants"
+version = "0.9.23"
+authors = ['Dhiway Networks <info@dhiway.com>']
+edition = "2021"
+
+[dependencies]
+smallvec = "1.8.0"
+
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.23" }
+primitives = { package = "polkadot-primitives", git = "https://github.com/dhiway/polkadot", default-features = false , branch = "polkadot-v0.9.23"}
+runtime-common = { package = "polkadot-runtime-common", git = "https://github.com/dhiway/polkadot", default-features = false , branch = "polkadot-v0.9.23" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.23" }
+
+[features]
+default = ["std"]
+std = [
+	"sp-runtime/std"
+]

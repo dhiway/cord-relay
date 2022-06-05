@@ -1,0 +1,12 @@
+**/target/
+**/*.rs.bk
+*.swp
+.wasm-binaries
+runtime/wasm/target/
+**/._*
+.idea
+.vscode
+!.rpm/*
+.DS_Store
+.cargo
+.env
