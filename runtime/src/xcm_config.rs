@@ -39,8 +39,8 @@ use xcm_builder::{
 };
 
 parameter_types! {
-	pub const CordLocation: MultiLocation = Here.into();
-	pub const CordNetwork: NetworkId = NetworkId::Any;
+	pub const WayLocation: MultiLocation = Here.into();
+	pub const RelayNetwork: NetworkId = NetworkId::Any;
 	pub const Ancestry: MultiLocation = Here.into();
 	pub CheckAccount: AccountId = XcmPallet::check_account();
 }
@@ -51,7 +51,7 @@ pub type SovereignAccountOf = (
 	// We can convert a child parachain using the standard `AccountId` conversion.
 	ChildParachainConvertsVia<ParaId, AccountId>,
 	// We can directly alias an `AccountId32` into a local account.
-	AccountId32Aliases<CordNetwork, AccountId>,
+	AccountId32Aliases<RelayNetwork, AccountId>,
 );
 
 /// Our asset transactor. This is what allows us to interest with the runtime facilities from the point of
@@ -62,7 +62,7 @@ pub type LocalAssetTransactor = XcmCurrencyAdapter<
 	// Use this currency:
 	Balances,
 	// Use this currency when it is a fungible asset matching the given location or name:
-	IsConcrete<CordLocation>,
+	IsConcrete<WayLocation>,
 	// We can convert the MultiLocations with our converter above:
 	SovereignAccountOf,
 	// Our chain's account ID type (we can't get away without mentioning it explicitly):
@@ -78,7 +78,7 @@ type LocalOriginConverter = (
 	// A child parachain, natively expressed, has the `Parachain` origin.
 	ChildParachainAsNative<parachains_origin::Origin, Origin>,
 	// The AccountId32 location type can be expressed natively as a `Signed` origin.
-	SignedAccountId32AsNative<CordNetwork, Origin>,
+	SignedAccountId32AsNative<RelayNetwork, Origin>,
 	// A system child parachain, expressed as a Superuser, converts to the `Root` origin.
 	ChildSystemParachainAsSuperuser<ParaId, Origin>,
 );
@@ -99,7 +99,7 @@ pub type XcmRouter = (
 );
 
 parameter_types! {
-	pub const Cord: MultiAssetFilter = Wild(AllOf { fun: WildFungible, id: Concrete(CordLocation::get()) });
+	pub const Cord: MultiAssetFilter = Wild(AllOf { fun: WildFungible, id: Concrete(WayLocation::get()) });
 	pub const CordForStreams: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(100).into());
 	pub const CordForAssets: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(110).into());
 }
@@ -140,8 +140,7 @@ impl xcm_executor::Config for XcmConfig {
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<BaseXcmWeight, Call, MaxInstructions>;
 	// The weight trader piggybacks on the existing transaction-fee conversion logic.
-	type Trader =
-		UsingComponents<WeightToFee, CordLocation, AccountId, Balances, ToAuthor<Runtime>>;
+	type Trader = UsingComponents<WeightToFee, WayLocation, AccountId, Balances, ToAuthor<Runtime>>;
 	type ResponseHandler = XcmPallet;
 	type AssetTrap = XcmPallet;
 	type AssetClaims = XcmPallet;
@@ -163,7 +162,7 @@ pub type LocalOriginToLocation = (
 		CouncilBodyId,
 	>,
 	// And a usual Signed origin to be used in XCM as a corresponding AccountId32
-	SignedToAccountId32<Origin, AccountId, CordNetwork>,
+	SignedToAccountId32<Origin, AccountId, RelayNetwork>,
 );
 impl pallet_xcm::Config for Runtime {
 	type Event = Event;
