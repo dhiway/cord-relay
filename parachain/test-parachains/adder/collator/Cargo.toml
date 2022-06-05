@@ -37,7 +37,7 @@ sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkad
 polkadot-node-core-pvf  = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
 
 [dev-dependencies]
-polkadot-parachain = { path = "../../.." }
+cord-parachain = { path = "../../.." }
 polkadot-test-service = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
 
 substrate-test-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }

@@ -76,7 +76,6 @@ lru = "0.7"
 # Polkadot
 polkadot-node-core-parachains-inherent = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23"}
 polkadot-overseer = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
-polkadot-parachain = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
 polkadot-primitives = {git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
 polkadot-node-primitives = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
 polkadot-node-subsystem = {git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
@@ -90,6 +89,7 @@ cord-runtime-constants = { path = "../../runtime/constants", optional = true }
 cord-client = {path = "../client", default-features = false, optional = true }
 cord-runtime = { path = "../../runtime", optional = true }
 cord-rpc = {path = "../../rpc"}
+cord-parachain ={path = "../../parachain"} 
 
 # Polkadot Subsystems
 polkadot-approval-distribution = { git = "https://github.com/dhiway/polkadot", optional = true, branch = "polkadot-v0.9.23" }
