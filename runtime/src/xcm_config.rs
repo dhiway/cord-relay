@@ -40,7 +40,7 @@ use xcm_builder::{
 
 parameter_types! {
 	pub const WayLocation: MultiLocation = Here.into();
-	pub const RelayNetwork: NetworkId = NetworkId::Any;
+	pub CordNetwork: NetworkId = NetworkId::Named(b"CORD".to_vec());
 	pub const Ancestry: MultiLocation = Here.into();
 	pub CheckAccount: AccountId = XcmPallet::check_account();
 }
@@ -51,7 +51,7 @@ pub type SovereignAccountOf = (
 	// We can convert a child parachain using the standard `AccountId` conversion.
 	ChildParachainConvertsVia<ParaId, AccountId>,
 	// We can directly alias an `AccountId32` into a local account.
-	AccountId32Aliases<RelayNetwork, AccountId>,
+	AccountId32Aliases<CordNetwork, AccountId>,
 );
 
 /// Our asset transactor. This is what allows us to interest with the runtime facilities from the point of
@@ -78,7 +78,7 @@ type LocalOriginConverter = (
 	// A child parachain, natively expressed, has the `Parachain` origin.
 	ChildParachainAsNative<parachains_origin::Origin, Origin>,
 	// The AccountId32 location type can be expressed natively as a `Signed` origin.
-	SignedAccountId32AsNative<RelayNetwork, Origin>,
+	SignedAccountId32AsNative<CordNetwork, Origin>,
 	// A system child parachain, expressed as a Superuser, converts to the `Root` origin.
 	ChildSystemParachainAsSuperuser<ParaId, Origin>,
 );
@@ -162,7 +162,7 @@ pub type LocalOriginToLocation = (
 		CouncilBodyId,
 	>,
 	// And a usual Signed origin to be used in XCM as a corresponding AccountId32
-	SignedToAccountId32<Origin, AccountId, RelayNetwork>,
+	SignedToAccountId32<Origin, AccountId, CordNetwork>,
 );
 impl pallet_xcm::Config for Runtime {
 	type Event = Event;
