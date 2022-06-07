@@ -1094,6 +1094,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cord-primitives"
+version = "0.7.2"
+dependencies = [
+ "base58",
+ "blake2-rfc",
+ "frame-support",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "cord-rpc"
 version = "0.9.23"
 dependencies = [

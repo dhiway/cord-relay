@@ -33,6 +33,7 @@ members = [
 	"node/service",
 	"node/perf",
 	"rpc",
+	"primitives",
 	"parachain",
 	"parachain/test-parachains",
 	"parachain/test-parachains/adder",
