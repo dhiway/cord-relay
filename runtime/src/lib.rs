@@ -23,6 +23,8 @@
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
 
+pub mod impls;
+
 use pallet_transaction_payment::CurrencyAdapter;
 use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use primitives::v2::{
@@ -34,7 +36,7 @@ use primitives::v2::{
 };
 use runtime_common::{
 	assigned_slots, auctions, crowdloan, impl_runtime_weights, impls::DealWithFees,
-	paras_registrar, paras_sudo_wrapper, prod_or_fast, slots, BlockLength, SlowAdjustingFeeUpdate,
+	paras_registrar, paras_sudo_wrapper, prod_or_fast, slots, BlockLength,
 };
 use sp_std::{cmp::Ordering, collections::btree_map::BTreeMap, prelude::*};
 
@@ -99,6 +101,9 @@ mod validator_manager;
 
 // XCM configurations.
 pub mod xcm_config;
+
+/// Implementations of some helper traits passed into runtime modules as associated types.
+pub use impls::ToAuthor;
 
 impl_runtime_weights!(cord_runtime_constants);
 
@@ -303,6 +308,11 @@ impl pallet_indices::Config for Runtime {
 	type Event = Event;
 	type WeightInfo = weights::pallet_indices::WeightInfo<Runtime>;
 }
+
+/// Parameterized slow adjusting fee updated based on
+/// https://research.web3.foundation/en/latest/polkadot/overview/2-token-economics.html#-2.-slow-adjusting-mechanism
+pub type SlowAdjustingFeeUpdate<R> =
+	TargetedFeeAdjustment<R, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
 
 parameter_types! {
 	pub const ExistentialDeposit: Balance = EXISTENTIAL_DEPOSIT;
