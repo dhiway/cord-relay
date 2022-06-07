@@ -1144,6 +1144,7 @@ version = "0.9.23"
 dependencies = [
  "beefy-primitives",
  "bitvec",
+ "cord-primitives",
  "cord-runtime-constants",
  "frame-benchmarking",
  "frame-executive",

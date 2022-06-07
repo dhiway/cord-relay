@@ -16,8 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with CORD. If not, see <https://www.gnu.org/licenses/>.
 
-#![cfg_attr(not(feature = "std"), no_std)]
-#![allow(clippy::unused_unit)]
 use crate::*;
 use base58::{FromBase58, ToBase58};
 use blake2_rfc::blake2b::{Blake2b, Blake2bResult};
@@ -80,7 +78,7 @@ pub fn from_known_format(id: &IdentifierOf, id_ident: u16) -> IdentifierVerifica
 		.from_base58()
 		.map_err(|_| IdentifierVerificationError::InvalidIdentifier)?;
 	if data.len() < 2 {
-		return Err(IdentifierVerificationError::InvalidIdentifierLength)
+		return Err(IdentifierVerificationError::InvalidIdentifierLength);
 	}
 	ensure!(
 		(identifier.len() > 2 && identifier.len() < 50),
