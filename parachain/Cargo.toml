@@ -1,6 +1,6 @@
 [package]
 name = "cord-parachain"
-version = "0.9.23"
+version = "0.9.26"
 authors = ['Dhiway Networks <info@dhiway.com>']
 description = "Types and utilities for creating and working with parachains"
 edition = "2021"
@@ -12,11 +12,11 @@ edition = "2021"
 parity-scale-codec = { version = "3.1.2", default-features = false, features = [ "derive" ] }
 parity-util-mem = { version = "0.11.0", default-features = false, optional = true }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
-sp-std = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.23" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.23" }
-sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.23" }
-frame-support = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.23" }
-polkadot-core-primitives = { git = "https://github.com/dhiway/polkadot", default-features = false,  branch = "polkadot-v0.9.23"}
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.26" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.26" }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.26" }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.26" }
+polkadot-core-primitives = { git = "https://github.com/paritytech/polkadot", default-features = false,  branch = "release-v0.9.26"}
 derive_more = "0.99.11"
 
 # all optional crates.

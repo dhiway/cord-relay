@@ -1,6 +1,6 @@
 [package]
 name = "test-parachain-undying-collator"
-version = "0.9.23"
+version = "0.9.26"
 authors = ["Parity Technologies <admin@parity.io>"]
 description = "Collator for the undying test parachain"
 edition = "2021"
@@ -21,27 +21,27 @@ futures-timer = "3.0.2"
 log = "0.4.17"
 
 test-parachain-undying = { path = ".." }
-polkadot-primitives = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
-cord-cli = { path = "../../../../cli" }
-cord-service = { path = "../../../../node/service" }
-polkadot-node-primitives = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
-polkadot-node-subsystem = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
+polkadot-primitives = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
+polkadot-cli = { path = "../../../../cli" }
+polkadot-service = { path = "../../../../node/service" }
+polkadot-node-primitives = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
+polkadot-node-subsystem = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
 
-sc-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
-sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
+sc-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 
 # This one is tricky. Even though it is not used directly by the collator, we still need it for the
 # `puppet_worker` binary, which is required for the integration test. However, this shouldn't be
 # a big problem since it is used transitively anyway.
-polkadot-node-core-pvf  = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
+polkadot-node-core-pvf  = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
 
 [dev-dependencies]
 cord-parachain = { path = "../../.." }
-polkadot-test-service = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
+polkadot-test-service = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
 
-substrate-test-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
-sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
-sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
+substrate-test-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 
 tokio = { version = "1.18", features = ["macros"] }

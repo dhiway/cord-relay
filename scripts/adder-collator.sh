@@ -4,7 +4,7 @@
 
 set -e
 
-chainspec="cord-local"
+chainspec="cord-local-raw.json"
 
 # disabled until we can actually successfully register the chain with polkadot-js-api
 # if ! command -v polkadot-js-api > /dev/null; then
@@ -27,7 +27,7 @@ last_modified_rust_file=$(
 )
 
 polkadot="target/release/cord"
-adder_collator="target/release/adder-collator"
+# adder_collator="~/devel/smohan/para/new/substrate-parachain-template/target/release/parachain-collator"
 
 # ensure the polkadot binary exists and is up to date
 if [ ! -x "$polkadot" ] || [ "$polkadot" -ot "$last_modified_rust_file" ]; then
@@ -43,8 +43,8 @@ printf "$genesis"
 genesis_state="$genesis/state"
 validation_code="$genesis/validation_code"
 
-"$adder_collator" export-genesis-state > "$genesis_state"
-"$adder_collator" export-genesis-wasm > "$validation_code"
+# "$adder_collator" export-genesis-state > "$genesis_state"
+# "$adder_collator" export-genesis-wasm > "$validation_code"
 
 
 # setup variables
@@ -171,7 +171,7 @@ trap finish EXIT
 # start the nodes
 run_node Alice
 run_node Bob
-run_adder_collator AdderCollator
+# run_adder_collator AdderCollator
 
 # register the adder collator
 # doesn't work yet due to https://github.com/polkadot-js/tools/issues/185

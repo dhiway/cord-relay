@@ -106,8 +106,8 @@ macro_rules! unwrap_client {
 	) => {
 		match $client.as_ref() {
 			#[cfg(feature = "cord-native")]
-			cord_client::Client::Cord($client) => $code,
-			#[allow(unreachable_patterns)]
+			polkadot_client::Client::Cord($client) => $code,
+			#[allow( unreachable_patterns)]
 			_ => Err(Error::CommandNotImplemented),
 		}
 	};
@@ -358,7 +358,7 @@ pub fn run() -> Result<()> {
 				BenchmarkCmd::Overhead(cmd) => {
 					ensure_dev(chain_spec).map_err(Error::Other)?;
 					runner.sync_run(|mut config| {
-						use cord_client::benchmark_inherent_data;
+						use polkadot_client::benchmark_inherent_data;
 						let (client, _, _, _) = service::new_chain_ops(&mut config, None)?;
 						let wrapped = client.clone();
 

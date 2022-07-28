@@ -82,13 +82,13 @@ use telemetry::TelemetryWorker;
 #[cfg(feature = "full-node")]
 use telemetry::{Telemetry, TelemetryWorkerHandle};
 
-pub use cord_client::CordExecutorDispatch;
+pub use polkadot_client::CordExecutorDispatch;
 
 pub use chain_spec::CordChainSpec;
 pub use consensus_common::{block_validation::Chain, Proposal, SelectChain};
 
 #[cfg(feature = "full-node")]
-pub use cord_client::{
+pub use polkadot_client::{
 	AbstractClient, Client, ClientHandle, ExecuteWithClient, FullBackend, FullClient,
 	RuntimeApiCollection,
 };
@@ -405,9 +405,9 @@ fn new_partial<RuntimeApi, ExecutorDispatch, ChainSelection>(
 		sc_transaction_pool::FullPool<Block, FullClient<RuntimeApi, ExecutorDispatch>>,
 		(
 			impl Fn(
-				cord_rpc::DenyUnsafe,
-				cord_rpc::SubscriptionTaskExecutor,
-			) -> Result<cord_rpc::RpcExtension, SubstrateServiceError>,
+				polkadot_rpc::DenyUnsafe,
+				polkadot_rpc::SubscriptionTaskExecutor,
+			) -> Result<polkadot_rpc::RpcExtension, SubstrateServiceError>,
 			(
 				babe::BabeBlockImport<
 					Block,
@@ -509,34 +509,34 @@ where
 		let backend = backend.clone();
 
 		move |deny_unsafe,
-		      subscription_executor: cord_rpc::SubscriptionTaskExecutor|
-		      -> Result<cord_rpc::RpcExtension, service::Error> {
-			let deps = cord_rpc::FullDeps {
+		      subscription_executor: polkadot_rpc::SubscriptionTaskExecutor|
+		      -> Result<polkadot_rpc::RpcExtension, service::Error> {
+			let deps = polkadot_rpc::FullDeps {
 				client: client.clone(),
 				pool: transaction_pool.clone(),
 				select_chain: select_chain.clone(),
 				chain_spec: chain_spec.cloned_box(),
 				deny_unsafe,
-				babe: cord_rpc::BabeDeps {
+				babe: polkadot_rpc::BabeDeps {
 					babe_config: babe_config.clone(),
 					shared_epoch_changes: shared_epoch_changes.clone(),
 					keystore: keystore.clone(),
 				},
-				grandpa: cord_rpc::GrandpaDeps {
+				grandpa: polkadot_rpc::GrandpaDeps {
 					shared_voter_state: shared_voter_state.clone(),
 					shared_authority_set: shared_authority_set.clone(),
 					justification_stream: justification_stream.clone(),
 					subscription_executor: subscription_executor.clone(),
 					finality_provider: finality_proof_provider.clone(),
 				},
-				beefy: cord_rpc::BeefyDeps {
+				beefy: polkadot_rpc::BeefyDeps {
 					beefy_commitment_stream: beefy_commitment_stream.clone(),
 					beefy_best_block_stream: beefy_best_block_stream.clone(),
 					subscription_executor,
 				},
 			};
 
-			cord_rpc::create_full(deps, backend.clone()).map_err(Into::into)
+			polkadot_rpc::create_full(deps, backend.clone()).map_err(Into::into)
 		}
 	};
 
@@ -1337,7 +1337,7 @@ impl ExecuteWithClient for RevertConsensus {
 		<Api as sp_api::ApiExt<Block>>::StateBackend: sp_api::StateBackend<BlakeTwo256>,
 		Backend: sc_client_api::Backend<Block> + 'static,
 		Backend::State: sp_api::StateBackend<BlakeTwo256>,
-		Api: cord_client::RuntimeApiCollection<StateBackend = Backend::State>,
+		Api: polkadot_client::RuntimeApiCollection<StateBackend = Backend::State>,
 		Client: AbstractClient<Block, Backend, Api = Api> + 'static,
 	{
 		// Revert consensus-related components.
