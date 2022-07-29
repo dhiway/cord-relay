@@ -23,7 +23,11 @@ use super::{
 	parachains_origin, AccountId, Balances, Call, CouncilCollective, Event, Origin, ParaId,
 	Runtime, WeightToFee, XcmPallet,
 };
-use frame_support::{match_types, parameter_types, traits::Everything, weights::Weight};
+use frame_support::{
+	match_types, parameter_types,
+	traits::{Everything, IsInVec, Nothing},
+	weights::Weight,
+};
 use runtime_common::{xcm_sender, ToAuthor};
 use sp_std::prelude::*;
 use xcm::latest::prelude::*;
@@ -31,15 +35,22 @@ use xcm_builder::{
 	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
 	AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, BackingToPlurality,
 	ChildParachainAsNative, ChildParachainConvertsVia, ChildSystemParachainAsSuperuser,
-	CurrencyAdapter as XcmCurrencyAdapter, FixedWeightBounds, IsChildSystemParachain, IsConcrete,
-	LocationInverter, SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation,
-	TakeWeightCredit, UsingComponents, WeightInfoBounds,
+	CurrencyAdapter as XcmCurrencyAdapter, FixedWeightBounds, IsConcrete, LocationInverter,
+	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
+	UsingComponents,
 };
 
 parameter_types! {
+	/// The location of the WAY token, from the context of this chain. Since this token is native to this
+	/// chain, we make it synonymous with it and thus it is the `Here` location, which means "equivalent to
+	/// the context".
 	pub const WayLocation: MultiLocation = Here.into();
+	/// Our XCM location ancestry - i.e. what, if anything, `Parent` means evaluated in our context. Since
+	/// Cord is a top-level relay-chain, there is no ancestry.
 	pub const Ancestry: MultiLocation = Here.into();
+	/// The Cord network ID.
 	pub CordNetwork: NetworkId = NetworkId::Named(b"Cord".to_vec().try_into().expect("shorter than length limit; qed"));
+	/// The check account, which holds any native assets that have been teleported out and not back in (yet).
 	pub CheckAccount: AccountId = XcmPallet::check_account();
 }
 
@@ -98,17 +109,28 @@ pub type XcmRouter = (
 
 parameter_types! {
 	pub const Cord: MultiAssetFilter = Wild(AllOf { fun: WildFungible, id: Concrete(WayLocation::get()) });
-	pub const Streams: MultiLocation = Parachain(100).into();
-	pub const Assets: MultiLocation = Parachain(110).into();
-	pub const CordForStreams: (MultiAssetFilter, MultiLocation) = (Cord::get(), Streams::get());
-	pub const CordForAssets: (MultiAssetFilter, MultiLocation) = (Cord::get(), Assets::get());
+	pub const CordForStreams: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(100).into());
+	pub const CordForAssets: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(110).into());
+	pub const CordForCanvas: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(120).into());
 }
-pub type TrustedTeleporters = (xcm_builder::Case<CordForStreams>, xcm_builder::Case<CordForAssets>);
+pub type TrustedTeleporters = (
+	xcm_builder::Case<CordForStreams>,
+	xcm_builder::Case<CordForAssets>,
+	xcm_builder::Case<CordForCanvas>,
+);
 
 match_types! {
 	pub type OnlyParachains: impl Contains<MultiLocation> = {
 		MultiLocation { parents: 0, interior: X1(Parachain(_)) }
 	};
+}
+
+parameter_types! {
+	pub AllowUnpaidFrom: Vec<MultiLocation> =
+		vec![
+			Parachain(105).into(),
+			Parachain(106).into(),
+		];
 }
 
 // The barriers one of which must be passed for an XCM message to be executed.
@@ -118,11 +140,11 @@ pub type Barrier = (
 	// If the message is one that immediately attemps to pay for execution, then allow it.
 	AllowTopLevelPaidExecutionFrom<Everything>,
 	// Messages coming from system parachains need not pay for execution.
-	AllowUnpaidExecutionFrom<IsChildSystemParachain<ParaId>>,
+	AllowUnpaidExecutionFrom<IsInVec<AllowUnpaidFrom>>,
 	// Expected responses are OK.
 	AllowKnownQueryResponses<XcmPallet>,
 	// Subscriptions for version tracking are OK.
-	AllowSubscriptionsFrom<OnlyParachains>,
+	AllowSubscriptionsFrom<Everything>,
 );
 
 pub struct XcmConfig;
@@ -135,8 +157,7 @@ impl xcm_executor::Config for XcmConfig {
 	type IsTeleporter = TrustedTeleporters;
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = Barrier;
-	type Weigher =
-		WeightInfoBounds<crate::weights::xcm::CordXcmWeight<Call>, Call, MaxInstructions>;
+	type Weigher = FixedWeightBounds<BaseXcmWeight, Call, MaxInstructions>;
 	// The weight trader piggybacks on the existing transaction-fee conversion logic.
 	type Trader = UsingComponents<WeightToFee, WayLocation, AccountId, Balances, ToAuthor<Runtime>>;
 	type ResponseHandler = XcmPallet;
@@ -149,30 +170,29 @@ parameter_types! {
 	pub const CouncilBodyId: BodyId = BodyId::Executive;
 }
 
+/// Type to convert the council origin to a Plurality `MultiLocation` value.
+pub type CouncilToPlurality = BackingToPlurality<
+	Origin,
+	pallet_collective::Origin<Runtime, CouncilCollective>,
+	CouncilBodyId,
+>;
+
 /// Type to convert an `Origin` type value into a `MultiLocation` value which represents an interior location
 /// of this chain.
 pub type LocalOriginToLocation = (
 	// We allow an origin from the Collective pallet to be used in XCM as a corresponding Plurality of the
 	// `Unit` body.
-	BackingToPlurality<
-		Origin,
-		pallet_collective::Origin<Runtime, CouncilCollective>,
-		CouncilBodyId,
-	>,
+	CouncilToPlurality,
 	// And a usual Signed origin to be used in XCM as a corresponding AccountId32
 	SignedToAccountId32<Origin, AccountId, CordNetwork>,
 );
 impl pallet_xcm::Config for Runtime {
 	type Event = Event;
-	// We don't allow any messages to be sent via the transaction yet. This is basically safe to
-	// enable, (safe the possibility of someone spamming the parachain if they're willing to pay
-	// the DOT to send from the Relay-chain). But it's useless until we bring in XCM v3 which will
-	// make `DescendOrigin` a bit more useful.
-	type SendXcmOrigin = xcm_builder::EnsureXcmOrigin<Origin, ()>;
+	type SendXcmOrigin = xcm_builder::EnsureXcmOrigin<Origin, LocalOriginToLocation>;
 	type XcmRouter = XcmRouter;
 	// Anyone can execute XCM messages locally.
 	type ExecuteXcmOrigin = xcm_builder::EnsureXcmOrigin<Origin, LocalOriginToLocation>;
-	type XcmExecuteFilter = Everything;
+	type XcmExecuteFilter = Nothing;
 	type XcmExecutor = xcm_executor::XcmExecutor<XcmConfig>;
 	// Anyone is able to use teleportation regardless of who they are and what they want to teleport.
 	type XcmTeleportFilter = Everything;

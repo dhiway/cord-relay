@@ -31,16 +31,7 @@ members = [
 	"runtime/constants",
 	"node/client",
 	"node/service",
-	# "node/perf",
-	# "rpc",
-	"primitives",
-	# "parachain",
-	# "parachain/test-parachains",
-	# "parachain/test-parachains/adder",
-	# "parachain/test-parachains/adder/collator",
-	# "parachain/test-parachains/halt",
-	# "parachain/test-parachains/undying",
-	# "parachain/test-parachains/undying/collator",
+	"node/perf",
 ]
 
 [badges]
