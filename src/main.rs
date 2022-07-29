@@ -25,6 +25,6 @@ use color_eyre::eyre;
 
 fn main() -> eyre::Result<()> {
 	color_eyre::install()?;
-	cord_cli::run()?;
+	polkadot_cli::run()?;
 	Ok(())
 }

@@ -312,8 +312,8 @@ pub fn cord_local_testnet_config() -> Result<CordChainSpec, String> {
 	let wasm_binary = cord::WASM_BINARY.ok_or("CORD development wasm not available")?;
 
 	Ok(CordChainSpec::from_genesis(
-		"Local Testnet",
-		"local_testnet",
+		"Cord Local Testnet",
+		"cord_local_testnet",
 		ChainType::Local,
 		move || cord_local_testnet_genesis(wasm_binary),
 		vec![],

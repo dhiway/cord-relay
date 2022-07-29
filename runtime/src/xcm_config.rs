@@ -24,7 +24,7 @@ use super::{
 	Runtime, WeightToFee, XcmPallet,
 };
 use frame_support::{
-	parameter_types,
+	match_types, parameter_types,
 	traits::{Everything, IsInVec, Nothing},
 	weights::Weight,
 };
@@ -32,16 +32,25 @@ use runtime_common::{xcm_sender, ToAuthor};
 use sp_std::prelude::*;
 use xcm::latest::prelude::*;
 use xcm_builder::{
-	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom, BackingToPlurality,
+	AccountId32Aliases, AllowKnownQueryResponses, AllowSubscriptionsFrom,
+	AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, BackingToPlurality,
 	ChildParachainAsNative, ChildParachainConvertsVia, ChildSystemParachainAsSuperuser,
 	CurrencyAdapter as XcmCurrencyAdapter, FixedWeightBounds, IsConcrete, LocationInverter,
-	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, UsingComponents,
+	SignedAccountId32AsNative, SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit,
+	UsingComponents,
 };
 
 parameter_types! {
-	pub const CordLocation: MultiLocation = Here.into();
-	pub const CordNetwork: NetworkId = NetworkId::Any;
+	/// The location of the WAY token, from the context of this chain. Since this token is native to this
+	/// chain, we make it synonymous with it and thus it is the `Here` location, which means "equivalent to
+	/// the context".
+	pub const WayLocation: MultiLocation = Here.into();
+	/// Our XCM location ancestry - i.e. what, if anything, `Parent` means evaluated in our context. Since
+	/// Cord is a top-level relay-chain, there is no ancestry.
 	pub const Ancestry: MultiLocation = Here.into();
+	/// The Cord network ID.
+	pub CordNetwork: NetworkId = NetworkId::Named(b"Cord".to_vec().try_into().expect("shorter than length limit; qed"));
+	/// The check account, which holds any native assets that have been teleported out and not back in (yet).
 	pub CheckAccount: AccountId = XcmPallet::check_account();
 }
 
@@ -62,7 +71,7 @@ pub type LocalAssetTransactor = XcmCurrencyAdapter<
 	// Use this currency:
 	Balances,
 	// Use this currency when it is a fungible asset matching the given location or name:
-	IsConcrete<CordLocation>,
+	IsConcrete<WayLocation>,
 	// We can convert the MultiLocations with our converter above:
 	SovereignAccountOf,
 	// Our chain's account ID type (we can't get away without mentioning it explicitly):
@@ -99,22 +108,32 @@ pub type XcmRouter = (
 );
 
 parameter_types! {
-	pub const Cord: MultiAssetFilter = Wild(AllOf { fun: WildFungible, id: Concrete(CordLocation::get()) });
+	pub const Cord: MultiAssetFilter = Wild(AllOf { fun: WildFungible, id: Concrete(WayLocation::get()) });
 	pub const CordForStreams: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(100).into());
 	pub const CordForAssets: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(110).into());
+	pub const CordForCanvas: (MultiAssetFilter, MultiLocation) = (Cord::get(), Parachain(120).into());
 }
-pub type TrustedTeleporters = (xcm_builder::Case<CordForStreams>, xcm_builder::Case<CordForAssets>);
+pub type TrustedTeleporters = (
+	xcm_builder::Case<CordForStreams>,
+	xcm_builder::Case<CordForAssets>,
+	xcm_builder::Case<CordForCanvas>,
+);
+
+match_types! {
+	pub type OnlyParachains: impl Contains<MultiLocation> = {
+		MultiLocation { parents: 0, interior: X1(Parachain(_)) }
+	};
+}
 
 parameter_types! {
 	pub AllowUnpaidFrom: Vec<MultiLocation> =
 		vec![
-			Parachain(100).into(),
-			Parachain(110).into(),
+			Parachain(105).into(),
+			Parachain(106).into(),
 		];
 }
 
-use xcm_builder::{AllowTopLevelPaidExecutionFrom, AllowUnpaidExecutionFrom, TakeWeightCredit};
-/// The barriers one of which must be passed for an XCM message to be executed.
+// The barriers one of which must be passed for an XCM message to be executed.
 pub type Barrier = (
 	// Weight that is paid for may be consumed.
 	TakeWeightCredit,
@@ -140,8 +159,7 @@ impl xcm_executor::Config for XcmConfig {
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<BaseXcmWeight, Call, MaxInstructions>;
 	// The weight trader piggybacks on the existing transaction-fee conversion logic.
-	type Trader =
-		UsingComponents<WeightToFee, CordLocation, AccountId, Balances, ToAuthor<Runtime>>;
+	type Trader = UsingComponents<WeightToFee, WayLocation, AccountId, Balances, ToAuthor<Runtime>>;
 	type ResponseHandler = XcmPallet;
 	type AssetTrap = XcmPallet;
 	type AssetClaims = XcmPallet;
@@ -152,25 +170,24 @@ parameter_types! {
 	pub const CouncilBodyId: BodyId = BodyId::Executive;
 }
 
+/// Type to convert the council origin to a Plurality `MultiLocation` value.
+pub type CouncilToPlurality = BackingToPlurality<
+	Origin,
+	pallet_collective::Origin<Runtime, CouncilCollective>,
+	CouncilBodyId,
+>;
+
 /// Type to convert an `Origin` type value into a `MultiLocation` value which represents an interior location
 /// of this chain.
 pub type LocalOriginToLocation = (
 	// We allow an origin from the Collective pallet to be used in XCM as a corresponding Plurality of the
 	// `Unit` body.
-	BackingToPlurality<
-		Origin,
-		pallet_collective::Origin<Runtime, CouncilCollective>,
-		CouncilBodyId,
-	>,
+	CouncilToPlurality,
 	// And a usual Signed origin to be used in XCM as a corresponding AccountId32
 	SignedToAccountId32<Origin, AccountId, CordNetwork>,
 );
 impl pallet_xcm::Config for Runtime {
 	type Event = Event;
-	// We don't allow any messages to be sent via the transaction yet. This is basically safe to
-	// enable, (safe the possibility of someone spamming the parachain if they're willing to pay
-	// the DOT to send from the Relay-chain). But it's useless until we bring in XCM v3 which will
-	// make `DescendOrigin` a bit more useful.
 	type SendXcmOrigin = xcm_builder::EnsureXcmOrigin<Origin, LocalOriginToLocation>;
 	type XcmRouter = XcmRouter;
 	// Anyone can execute XCM messages locally.

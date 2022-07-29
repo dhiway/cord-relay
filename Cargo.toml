@@ -6,14 +6,14 @@ path = "src/main.rs"
 name = "cord"
 description = "Implementation of a `https://cord.network` node in Rust based on the Substrate & Polkadot framework."
 license = "GPL-3.0-only"
-version = "0.9.23"
+version = "0.9.26"
 authors = ["Dhiway Networks <info@dhiway.com>"]
 edition = "2021"
 rust-version = "1.57.0" # custom profiles
 readme = "README.md"
 
 [dependencies]
-cord-cli = { path = "cli", features = [ "cord-native" ]  }
+polkadot-cli = { path = "cli", features = [ "cord-native" ]  }
 color-eyre = { version = "0.6.1", default-features = false }
 parity-util-mem = { version = "0.11.0", default-features = false, features = ["jemalloc-global"] }
 
@@ -22,7 +22,7 @@ assert_cmd = "2.0.4"
 nix = "0.24.1"
 tempfile = "3.2.0"
 tokio = "1.18.2"
-remote-externalities = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" }
+remote-externalities = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 
 [workspace]
 members = [
@@ -32,14 +32,6 @@ members = [
 	"node/client",
 	"node/service",
 	"node/perf",
-	"rpc",
-	"parachain",
-	"parachain/test-parachains",
-	"parachain/test-parachains/adder",
-	"parachain/test-parachains/adder/collator",
-	"parachain/test-parachains/halt",
-	"parachain/test-parachains/undying",
-	"parachain/test-parachains/undying/collator",
 ]
 
 [badges]
@@ -122,10 +114,10 @@ debug-assertions = true
 overflow-checks = true
 
 [features]
-runtime-benchmarks= [ "cord-cli/runtime-benchmarks" ]
-try-runtime = [ "cord-cli/try-runtime" ]
-fast-runtime = [ "cord-cli/fast-runtime" ]
-runtime-metrics = [ "cord-cli/runtime-metrics" ]
-pyroscope = ["cord-cli/pyroscope"]
+runtime-benchmarks= [ "polkadot-cli/runtime-benchmarks" ]
+try-runtime = [ "polkadot-cli/try-runtime" ]
+fast-runtime = [ "polkadot-cli/fast-runtime" ]
+runtime-metrics = [ "polkadot-cli/runtime-metrics" ]
+pyroscope = ["polkadot-cli/pyroscope"]
 
 
