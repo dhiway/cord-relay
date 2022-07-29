@@ -1,6 +1,6 @@
 [package]
-name = "cord-performance-test"
-version = "0.9.23"
+name = "polkadot-performance-test"
+version = "0.9.26"
 authors = ['Dhiway Networks <info@dhiway.com>']
 edition = '2021'
 
@@ -10,9 +10,9 @@ quote = "1.0.18"
 env_logger = "0.9"
 log = "0.4"
 
-polkadot-node-core-pvf = {  git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
-polkadot-erasure-coding = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23" }
-polkadot-node-primitives = { git = "https://github.com/dhiway/polkadot", branch = "polkadot-v0.9.23"}
+polkadot-node-core-pvf = {  git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
+polkadot-erasure-coding = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26" }
+polkadot-node-primitives = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.26"}
 
 cord-runtime = { path = "../../runtime" }
 

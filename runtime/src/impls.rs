@@ -19,8 +19,8 @@
 //
 //! Auxiliary `struct`/`enum`s for CORD runtime.
 
-pub use cord_primitives::{AccountId, Balance};
 use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
+// pub use primitives::v2::{AccountId, Balance};
 
 pub type NegativeImbalance<T> = <pallet_balances::Pallet<T> as Currency<
 	<T as frame_system::Config>::AccountId,
