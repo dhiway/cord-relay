@@ -1,19 +1,19 @@
-// This file is part of Substrate.
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
-// Copyright (C) 2022 Parity Technologies (UK) Ltd.
-// SPDX-License-Identifier: Apache-2.0
+// CORD is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// CORD is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with CORD. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod constants {
 	use frame_support::{
@@ -25,8 +25,8 @@ pub mod constants {
 		/// By default, Substrate uses `RocksDB`, so this will be the weight used throughout
 		/// the runtime.
 		pub const RocksDbWeight: RuntimeDbWeight = RuntimeDbWeight {
-			read: 25_000 * constants::WEIGHT_PER_NANOS,
-			write: 100_000 * constants::WEIGHT_PER_NANOS,
+			read: 25_000 * constants::WEIGHT_REF_TIME_PER_NANOS,
+			write: 100_000 * constants::WEIGHT_REF_TIME_PER_NANOS,
 		};
 	}
 
@@ -42,20 +42,20 @@ pub mod constants {
 		fn sane() {
 			// At least 1 µs.
 			assert!(
-				W::get().reads(1) >= constants::WEIGHT_PER_MICROS,
+				W::get().reads(1).ref_time() >= constants::WEIGHT_REF_TIME_PER_MICROS,
 				"Read weight should be at least 1 µs."
 			);
 			assert!(
-				W::get().writes(1) >= constants::WEIGHT_PER_MICROS,
+				W::get().writes(1).ref_time() >= constants::WEIGHT_REF_TIME_PER_MICROS,
 				"Write weight should be at least 1 µs."
 			);
 			// At most 1 ms.
 			assert!(
-				W::get().reads(1) <= constants::WEIGHT_PER_MILLIS,
+				W::get().reads(1).ref_time() <= constants::WEIGHT_REF_TIME_PER_MILLIS,
 				"Read weight should be at most 1 ms."
 			);
 			assert!(
-				W::get().writes(1) <= constants::WEIGHT_PER_MILLIS,
+				W::get().writes(1).ref_time() <= constants::WEIGHT_REF_TIME_PER_MILLIS,
 				"Write weight should be at most 1 ms."
 			);
 		}

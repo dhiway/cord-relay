@@ -1,8 +1,6 @@
-// Copyright (C) 2019-2022 Dhiway Networks Pvt. Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-// This file is part of CORD - `https://cord.network` relay node
-// based on Polkadot & Substrate framework."
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
 // CORD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +22,8 @@ use std::sync::Arc;
 use sp_runtime::traits::{Block as BlockT, Header as _, NumberFor};
 
 use crate::HeaderProvider;
+
+#[cfg(feature = "full-node")]
 
 /// Returns the block hash of the block at the given `target_number` by walking
 /// backwards from the given `current_header`.

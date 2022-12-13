@@ -1,8 +1,6 @@
-// Copyright (C) 2019-2022 Dhiway Networks Pvt. Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-// This file is part of CORD - `https://cord.network` relay node
-// based on Polkadot & Substrate framework."
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
 // CORD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,8 +19,7 @@
 pub enum Error {
 	#[error(transparent)]
 	CordService(#[from] service::Error),
-	// #[error(transparent)]
-	// PolkadotService(#[from] service::Error),
+
 	#[error(transparent)]
 	SubstrateCli(#[from] sc_cli::Error),
 
@@ -33,7 +30,7 @@ pub enum Error {
 	SubstrateTracing(#[from] sc_tracing::logging::Error),
 
 	#[error(transparent)]
-	PerfCheck(#[from] polkadot_performance_test::PerfCheckError),
+	PerfCheck(#[from] cord_performance_test::PerfCheckError),
 
 	#[cfg(not(feature = "pyroscope"))]
 	#[error("Binary was not compiled with `--feature=pyroscope`")]
@@ -48,9 +45,6 @@ pub enum Error {
 
 	#[error("URL did not resolve to anything")]
 	AddressResolutionMissing,
-
-	#[error("This subcommand is only available in release mode")]
-	WrongBuildType,
 
 	#[error("Command is not implemented")]
 	CommandNotImplemented,
