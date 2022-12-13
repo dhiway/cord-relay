@@ -23,7 +23,7 @@ pyro = { package = "pyroscope", version = "0.3.1", optional = true }
 service = { package = "polkadot-service", path = "../node/service", default-features = false, optional = true }
 polkadot-client = { path = "../node/client", optional = true }
 polkadot-node-core-pvf = { package = "polkadot-node-core-pvf", git = "https://github.com/paritytech/polkadot", branch = "master", optional = true }
-cord-performance-test = { path = "../node/performance-test", optional = true }
+cord-performance-test = { path = "../node/test/performance-test", optional = true }
 
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "master" }
 sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "master" }

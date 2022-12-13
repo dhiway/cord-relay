@@ -38,7 +38,7 @@ members = [
 	"runtime/constants",
 	"node/client",
 	"node/service",
-	"node/performance-test",
+	"node/test/performance-test",
 ]
 
 [badges]
@@ -100,7 +100,7 @@ yamux = { opt-level = 3 }
 zeroize = { opt-level = 3 }
 
 [profile.release]
-# Polkadot runtime requires unwinding.
+# Cord runtime requires unwinding.
 panic = "unwind"
 opt-level = 3
 
