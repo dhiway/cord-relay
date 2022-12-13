@@ -6,7 +6,7 @@ edition.workspace = true
 
 [dependencies]
 thiserror = "1.0.31"
-quote = "1.0.18"
+quote = "1.0.20"
 env_logger = "0.9"
 log = "0.4"
 
@@ -14,7 +14,7 @@ polkadot-node-core-pvf = {  git = "https://github.com/paritytech/polkadot", bran
 polkadot-erasure-coding = { git = "https://github.com/paritytech/polkadot", branch = "master" }
 polkadot-node-primitives = { git = "https://github.com/paritytech/polkadot", branch = "master"}
 
-cord-runtime = { path = "../../runtime" }
+cord-runtime = { path = "../../../runtime" }
 
 [[bin]]
 name = "gen-ref-constants"
