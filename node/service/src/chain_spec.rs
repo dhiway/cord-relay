@@ -1,8 +1,6 @@
-// Copyright (C) 2019-2022 Dhiway Networks Pvt. Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-// This file is part of CORD - `https://cord.network` relay node
-// based on Polkadot & Substrate framework."
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
 // CORD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,11 +14,11 @@
 
 // You should have received a copy of the GNU General Public License
 // along with CORD. If not, see <https://www.gnu.org/licenses/>.
-
 //! CORD chain configurations.
 
 use cord_runtime as cord;
 use cord_runtime_constants::currency::WAY;
+use frame_support::weights::Weight;
 use grandpa::AuthorityId as GrandpaId;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use polkadot_primitives::v2::{AccountId, AccountPublic, AssignmentId, ValidatorId};
@@ -80,7 +78,8 @@ fn default_parachains_host_configuration(
 		max_upward_queue_count: 8,
 		max_upward_queue_size: 1024 * 1024,
 		max_downward_message_size: 1024 * 1024,
-		ump_service_total_weight: 100_000_000_000,
+		ump_service_total_weight: Weight::from_ref_time(100_000_000_000)
+			.set_proof_size(MAX_POV_SIZE as u64),
 		max_upward_message_size: 50 * 1024,
 		max_upward_message_num_per_candidate: 5,
 		hrmp_sender_deposit: 0,

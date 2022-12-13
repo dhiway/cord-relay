@@ -1,8 +1,6 @@
-// Copyright (C) 2019-2022 Dhiway Networks Pvt. Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-// This file is part of CORD - `https://cord.network` relay node
-// based on Polkadot & Substrate framework."
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
 // CORD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,13 +16,19 @@
 // along with CORD. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::cli::{Cli, Subcommand};
-use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
+use frame_benchmarking_cli::{BenchmarkCmd, ExtrinsicFactory, SUBSTRATE_REFERENCE_HARDWARE};
 use futures::future::TryFutureExt;
-use sc_cli::{Role, RuntimeVersion, SubstrateCli};
+use polkadot_client::benchmarking::{
+	benchmark_inherent_data, ExistentialDepositProvider, RemarkBuilder, TransferKeepAliveBuilder,
+};
+use sc_cli::{RuntimeVersion, SubstrateCli};
 use service::{self, HeaderBackend, IdentifyVariant};
+use sp_core::crypto::Ss58AddressFormatRegistry;
+use sp_keyring::Sr25519Keyring;
 use std::net::ToSocketAddrs;
 
 pub use crate::{error::Error, service::BlockId};
+pub use cord_performance_test::PerfCheckError;
 
 impl From<String> for Error {
 	fn from(s: String) -> Self {
@@ -52,11 +56,11 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"https://github.com/dhiway/cord/issues/new".into()
+		"https://github.com/dhiway/cord-relay/issues/new".into()
 	}
 
 	fn copyright_start_year() -> i32 {
-		2019
+		2022
 	}
 
 	fn executable_name() -> String {
@@ -87,6 +91,11 @@ impl SubstrateCli for Cli {
 	}
 }
 
+fn set_default_ss58_version(_spec: &Box<dyn service::ChainSpec>) {
+	let ss58_version = Ss58AddressFormatRegistry::CordAccount.into();
+	sp_core::crypto::set_default_ss58_version(ss58_version);
+}
+
 const DEV_ONLY_ERROR_PATTERN: &'static str =
 	"can only use subcommand with --chain [cord-dev, dev], got ";
 
@@ -105,9 +114,8 @@ macro_rules! unwrap_client {
 		$code:expr
 	) => {
 		match $client.as_ref() {
-			#[cfg(feature = "cord-native")]
 			polkadot_client::Client::Cord($client) => $code,
-			#[allow( unreachable_patterns)]
+			#[allow(unreachable_patterns)]
 			_ => Err(Error::CommandNotImplemented),
 		}
 	};
@@ -118,26 +126,40 @@ macro_rules! unwrap_client {
 fn host_perf_check() -> Result<()> {
 	#[cfg(not(build_type = "release"))]
 	{
-		Err(Error::WrongBuildType)
+		return Err(PerfCheckError::WrongBuildType.into());
 	}
 	#[cfg(build_type = "release")]
 	{
-		crate::host_perf_check::host_perf_check()?;
-		Ok(())
+		#[cfg(not(feature = "hostperfcheck"))]
+		{
+			return Err(PerfCheckError::FeatureNotEnabled { feature: "hostperfcheck" }.into());
+		}
+		#[cfg(feature = "hostperfcheck")]
+		{
+			crate::host_perf_check::host_perf_check()?;
+			return Ok(());
+		}
 	}
 }
 
 /// Launch a node, accepting arguments just like a regular node,
 /// accepts an alternative overseer generator, to adjust behavior
 /// for integration tests as needed.
+/// /// `malus_finality_delay` restrict finality votes of this node
+/// to be at most `best_block - malus_finality_delay` height.
 #[cfg(feature = "malus")]
-pub fn run_node(run: Cli, overseer_gen: impl service::OverseerGen) -> Result<()> {
-	run_node_inner(run, overseer_gen, |_logger_builder, _config| {})
+pub fn run_node(
+	run: Cli,
+	overseer_gen: impl service::OverseerGen,
+	malus_finality_delay: Option<u32>,
+) -> Result<()> {
+	run_node_inner(run, overseer_gen, malus_finality_delay, |_logger_builder, _config| {})
 }
 
 fn run_node_inner<F>(
 	cli: Cli,
 	overseer_gen: impl service::OverseerGen,
+	maybe_malus_finality_delay: Option<u32>,
 	logger_hook: F,
 ) -> Result<()>
 where
@@ -152,6 +174,7 @@ where
 	if cli.run.beefy && (chain_spec.is_cord()) {
 		return Err(Error::Other("BEEFY disallowed on production networks".to_string()));
 	}
+	set_default_ss58_version(chain_spec);
 
 	let grandpa_pause = if cli.run.grandpa_pause.is_empty() {
 		None
@@ -181,25 +204,21 @@ where
 			None
 		};
 
-		let role = config.role.clone();
-
-		match role {
-			Role::Light => Err(Error::Other("Light client not enabled".into())),
-			_ => service::build_full(
-				config,
-				service::IsCollator::No,
-				grandpa_pause,
-				cli.run.beefy,
-				jaeger_agent,
-				None,
-				false,
-				overseer_gen,
-				cli.run.overseer_channel_capacity_override,
-				hwbench,
-			)
-			.map(|full| full.task_manager)
-			.map_err(Into::into),
-		}
+		service::build_full(
+			config,
+			service::IsCollator::No,
+			grandpa_pause,
+			cli.run.beefy,
+			jaeger_agent,
+			None,
+			false,
+			overseer_gen,
+			cli.run.overseer_channel_capacity_override,
+			maybe_malus_finality_delay,
+			hwbench,
+		)
+		.map(|full| full.task_manager)
+		.map_err(Into::into)
 	})
 }
 
@@ -217,7 +236,7 @@ pub fn run() -> Result<()> {
 		// The pyroscope agent requires a `http://` prefix, so we just do that.
 		let mut agent = pyro::PyroscopeAgent::builder(
 			"http://".to_owned() + address.to_string().as_str(),
-			"polkadot".to_owned(),
+			"cord".to_owned(),
 		)
 		.sample_rate(113)
 		.build()?;
@@ -233,13 +252,21 @@ pub fn run() -> Result<()> {
 	}
 
 	match &cli.subcommand {
-		None => run_node_inner(cli, service::RealOverseerGen, polkadot_node_metrics::logger_hook()),
+		None => run_node_inner(
+			cli,
+			service::RealOverseerGen,
+			None,
+			polkadot_node_metrics::logger_hook(),
+		),
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			Ok(runner.sync_run(|config| cmd.run(config.chain_spec, config.network))?)
 		},
 		Some(Subcommand::CheckBlock(cmd)) => {
 			let runner = cli.create_runner(cmd).map_err(Error::SubstrateCli)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
 
 			runner.async_run(|mut config| {
 				let (client, _, import_queue, task_manager) =
@@ -249,6 +276,9 @@ pub fn run() -> Result<()> {
 		},
 		Some(Subcommand::ExportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
 
 			Ok(runner.async_run(|mut config| {
 				let (client, _, _, task_manager) =
@@ -258,6 +288,9 @@ pub fn run() -> Result<()> {
 		},
 		Some(Subcommand::ExportState(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
 
 			Ok(runner.async_run(|mut config| {
 				let (client, _, _, task_manager) = service::new_chain_ops(&mut config, None)?;
@@ -266,6 +299,9 @@ pub fn run() -> Result<()> {
 		},
 		Some(Subcommand::ImportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
 
 			Ok(runner.async_run(|mut config| {
 				let (client, _, import_queue, task_manager) =
@@ -279,6 +315,9 @@ pub fn run() -> Result<()> {
 		},
 		Some(Subcommand::Revert(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
+			let chain_spec = &runner.config().chain_spec;
+
+			set_default_ss58_version(chain_spec);
 
 			Ok(runner.async_run(|mut config| {
 				let (client, backend, _, task_manager) = service::new_chain_ops(&mut config, None)?;
@@ -340,6 +379,16 @@ pub fn run() -> Result<()> {
 			let chain_spec = &runner.config().chain_spec;
 
 			match cmd {
+				#[cfg(not(feature = "runtime-benchmarks"))]
+				BenchmarkCmd::Storage(_) => {
+					return Err(sc_cli::Error::Input(
+						"Compile with --features=runtime-benchmarks \
+						to enable storage benchmarks."
+							.into(),
+					)
+					.into())
+				},
+				#[cfg(feature = "runtime-benchmarks")]
 				BenchmarkCmd::Storage(cmd) => runner.sync_run(|mut config| {
 					let (client, backend, _, _) = service::new_chain_ops(&mut config, None)?;
 					let db = backend.expose_db();
@@ -355,28 +404,59 @@ pub fn run() -> Result<()> {
 
 					unwrap_client!(client, cmd.run(client.clone()).map_err(Error::SubstrateCli))
 				}),
-				BenchmarkCmd::Overhead(cmd) => {
+				// These commands are very similar and can be handled in nearly the same way.
+				BenchmarkCmd::Extrinsic(_) | BenchmarkCmd::Overhead(_) => {
 					ensure_dev(chain_spec).map_err(Error::Other)?;
 					runner.sync_run(|mut config| {
-						use polkadot_client::benchmark_inherent_data;
 						let (client, _, _, _) = service::new_chain_ops(&mut config, None)?;
-						let wrapped = client.clone();
-
 						let header = client.header(BlockId::Number(0_u32.into())).unwrap().unwrap();
 						let inherent_data = benchmark_inherent_data(header)
 							.map_err(|e| format!("generating inherent data: {:?}", e))?;
+						let remark_builder = RemarkBuilder::new(client.clone());
 
-						unwrap_client!(
-							client,
-							cmd.run(config, client.clone(), inherent_data, wrapped)
+						match cmd {
+							BenchmarkCmd::Extrinsic(cmd) => {
+								let tka_builder = TransferKeepAliveBuilder::new(
+									client.clone(),
+									Sr25519Keyring::Alice.to_account_id(),
+									client.existential_deposit(),
+								);
+
+								let ext_factory = ExtrinsicFactory(vec![
+									Box::new(remark_builder),
+									Box::new(tka_builder),
+								]);
+
+								unwrap_client!(
+									client,
+									cmd.run(
+										client.clone(),
+										inherent_data,
+										Vec::new(),
+										&ext_factory
+									)
+									.map_err(Error::SubstrateCli)
+								)
+							},
+							BenchmarkCmd::Overhead(cmd) => unwrap_client!(
+								client,
+								cmd.run(
+									config,
+									client.clone(),
+									inherent_data,
+									Vec::new(),
+									&remark_builder
+								)
 								.map_err(Error::SubstrateCli)
-						)
+							),
+							_ => unreachable!("Ensured by the outside match; qed"),
+						}
 					})
 				},
 				BenchmarkCmd::Pallet(cmd) => {
+					set_default_ss58_version(chain_spec);
 					ensure_dev(chain_spec).map_err(Error::Other)?;
 
-					#[cfg(feature = "cord-native")]
 					{
 						return Ok(runner.sync_run(|config| {
 							cmd.run::<service::cord_runtime::Block, service::CordExecutorDispatch>(
@@ -412,6 +492,7 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::TryRuntime(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
+			set_default_ss58_version(chain_spec);
 
 			use sc_service::TaskManager;
 			let registry = &runner.config().prometheus_config.as_ref().map(|cfg| &cfg.registry);

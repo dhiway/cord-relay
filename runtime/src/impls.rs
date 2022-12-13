@@ -1,8 +1,6 @@
-// Copyright (C) 2019-2022 Dhiway Networks Pvt. Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-// This file is part of CORD - `https://cord.network` relay node
-// based on Polkadot & Substrate framework."
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
 // CORD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +31,6 @@ where
 	R: pallet_balances::Config + pallet_authorship::Config,
 	<R as frame_system::Config>::AccountId: From<primitives::v2::AccountId>,
 	<R as frame_system::Config>::AccountId: Into<primitives::v2::AccountId>,
-	<R as frame_system::Config>::Event: From<pallet_balances::Event<R>>,
 {
 	fn on_nonzero_unbalanced(amount: NegativeImbalance<R>) {
 		if let Some(author) = <pallet_authorship::Pallet<R>>::author() {
@@ -49,12 +46,13 @@ where
 	pallet_treasury::Pallet<R>: OnUnbalanced<NegativeImbalance<R>>,
 	<R as frame_system::Config>::AccountId: From<primitives::v2::AccountId>,
 	<R as frame_system::Config>::AccountId: Into<primitives::v2::AccountId>,
-	<R as frame_system::Config>::Event: From<pallet_balances::Event<R>>,
 {
 	fn on_unbalanceds<B>(mut fees_then_tips: impl Iterator<Item = NegativeImbalance<R>>) {
 		if let Some(fees) = fees_then_tips.next() {
+			// for fees, 80% to treasury, 20% to author
 			let mut split = fees.ration(80, 20);
 			if let Some(tips) = fees_then_tips.next() {
+				// for tips, if any, 100% to author
 				tips.merge_into(&mut split.1);
 			}
 			use pallet_treasury::Pallet as Treasury;

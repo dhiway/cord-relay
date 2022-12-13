@@ -1,8 +1,6 @@
-// Copyright (C) 2019-2022 Dhiway Networks Pvt. Ltd.
-// SPDX-License-Identifier: GPL-3.0-or-later
-
-// This file is part of CORD - `https://cord.network` relay node
-// based on Polkadot & Substrate framework."
+// Copyright 2022 Dhiway Networks Pvt. Ltd.
+// This file is part of CORD - `https://cord.network`.
+// A relay node implementation based on Polkadot & Substrate.
 
 // CORD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with CORD. If not, see <https://www.gnu.org/licenses/>.
 
-use polkadot_performance_test::{
+use cord_performance_test::{
 	measure_erasure_coding, measure_pvf_prepare, PerfCheckError, ERASURE_CODING_N_VALIDATORS,
 	ERASURE_CODING_TIME_LIMIT, PVF_PREPARE_TIME_LIMIT, VALIDATION_CODE_BOMB_LIMIT,
 };
@@ -28,7 +26,7 @@ use std::time::Duration;
 pub fn host_perf_check() -> Result<(), PerfCheckError> {
 	let pvf_prepare_time_limit = time_limit_from_baseline(PVF_PREPARE_TIME_LIMIT);
 	let erasure_coding_time_limit = time_limit_from_baseline(ERASURE_CODING_TIME_LIMIT);
-	let wasm_code = polkadot_performance_test::WASM_BINARY.ok_or(PerfCheckError::WasmBinaryMissing)?;
+	let wasm_code = cord_performance_test::WASM_BINARY.ok_or(PerfCheckError::WasmBinaryMissing)?;
 
 	// Decompress the code before running checks.
 	let code = sp_maybe_compressed_blob::decompress(wasm_code, VALIDATION_CODE_BOMB_LIMIT)
