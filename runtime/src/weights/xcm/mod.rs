@@ -23,9 +23,8 @@ pub enum AssetTypes {
 impl From<&MultiAsset> for AssetTypes {
 	fn from(asset: &MultiAsset) -> Self {
 		match asset {
-			MultiAsset { id: Concrete(MultiLocation { parents: 0, interior: Here }), .. } => {
-				AssetTypes::Balances
-			},
+			MultiAsset { id: Concrete(MultiLocation { parents: 0, interior: Here }), .. } =>
+				AssetTypes::Balances,
 			_ => AssetTypes::Unknown,
 		}
 	}
