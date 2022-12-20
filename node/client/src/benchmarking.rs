@@ -36,7 +36,7 @@ impl RemarkBuilder {
 	pub fn new(client: Arc<Client>) -> Self {
 		Self { client }
 	}
-}
+} 
 
 impl frame_benchmarking_cli::ExtrinsicBuilder for RemarkBuilder {
 	fn pallet(&self) -> &str {

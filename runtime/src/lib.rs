@@ -96,7 +96,6 @@ use cord_runtime_constants::{currency::*, fee::*, time::*};
 
 // Weights used in the runtime.
 mod weights;
-
 // Validator Manager.
 mod validator_manager;
 
