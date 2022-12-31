@@ -490,9 +490,14 @@ pub fn run() -> Result<()> {
 		Some(Subcommand::Key(cmd)) => Ok(cmd.run(&cli)?),
 		#[cfg(feature = "try-runtime")]
 		Some(Subcommand::TryRuntime(cmd)) => {
+			use sc_executor::{sp_wasm_interface::ExtendedHostFunctions, NativeExecutionDispatch};
 			let runner = cli.create_runner(cmd)?;
 			let chain_spec = &runner.config().chain_spec;
 			set_default_ss58_version(chain_spec);
+			type HostFunctionsOf<E> = ExtendedHostFunctions<
+				sp_io::SubstrateHostFunctions,
+				<E as NativeExecutionDispatch>::ExtendHostFunctions,
+			>;
 
 			use sc_service::TaskManager;
 			let registry = &runner.config().prometheus_config.as_ref().map(|cfg| &cfg.registry);
@@ -503,10 +508,9 @@ pub fn run() -> Result<()> {
 
 			#[cfg(feature = "cord-native")]
 			{
-				return runner.async_run(|config| {
+				return runner.async_run(|_| {
 					Ok((
-						cmd.run::<service::cord_runtime::Block, service::CordExecutorDispatch>(
-							config,
+						cmd.run::<service::cord_runtime::Block, HostFunctionsOf<service::CordExecutorDispatch>>(
 						)
 						.map_err(Error::SubstrateCli),
 						task_manager,

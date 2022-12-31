@@ -742,7 +742,7 @@ parameter_types! {
 	pub const DepositBase: Balance = deposit(1, 88);
 	// Additional storage item size of 32 bytes.
 	pub const DepositFactor: Balance = deposit(0, 32);
-	pub const MaxSignatories: u16 = 100;
+	pub const MaxSignatories: u32 = 100;
 }
 
 impl pallet_multisig::Config for Runtime {
@@ -977,7 +977,7 @@ impl parachains_disputes::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ParaDeposit: Balance = 40 * WAY;
+	pub const ParaDeposit: Balance = 100 * WAY;
 }
 
 impl paras_registrar::Config for Runtime {
@@ -991,8 +991,7 @@ impl paras_registrar::Config for Runtime {
 }
 
 parameter_types! {
-	// 6 weeks
-	pub LeasePeriod: BlockNumber = prod_or_fast!(6 * WEEKS, 6 * WEEKS, "CORD_LEASE_PERIOD");
+	pub LeasePeriod: BlockNumber = prod_or_fast!(6 * WEEKS, 1 * DAYS, "CORD_LEASE_PERIOD");
 }
 
 impl slots::Config for Runtime {
@@ -1081,19 +1080,19 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
-pub struct BalanceToU256;
-impl sp_runtime::traits::Convert<Balance, sp_core::U256> for BalanceToU256 {
-	fn convert(n: Balance) -> sp_core::U256 {
-		n.into()
-	}
-}
-pub struct U256ToBalance;
-impl sp_runtime::traits::Convert<sp_core::U256, Balance> for U256ToBalance {
-	fn convert(n: sp_core::U256) -> Balance {
-		use frame_support::traits::Defensive;
-		n.try_into().defensive_unwrap_or(Balance::MAX)
-	}
-}
+// pub struct BalanceToU256;
+// impl sp_runtime::traits::Convert<Balance, sp_core::U256> for BalanceToU256 {
+// 	fn convert(n: Balance) -> sp_core::U256 {
+// 		n.into()
+// 	}
+// }
+// pub struct U256ToBalance;
+// impl sp_runtime::traits::Convert<sp_core::U256, Balance> for U256ToBalance {
+// 	fn convert(n: sp_core::U256) -> Balance {
+// 		use frame_support::traits::Defensive;
+// 		n.try_into().defensive_unwrap_or(Balance::MAX)
+// 	}
+// }
 
 construct_runtime! {
 	pub enum Runtime where
@@ -1154,7 +1153,7 @@ construct_runtime! {
 		ParaInclusion: parachains_inclusion::{Pallet, Call, Storage, Event<T>} = 53,
 		ParaInherent: parachains_paras_inherent::{Pallet, Call, Storage, Inherent} = 54,
 		ParaScheduler: parachains_scheduler::{Pallet, Storage} = 55,
-		Paras: parachains_paras::{Pallet, Call, Storage, Event, Config} = 56,
+		Paras: parachains_paras::{Pallet, Call, Storage, Event, Config, ValidateUnsigned} = 56,
 		Initializer: parachains_initializer::{Pallet, Call, Storage} = 57,
 		Dmp: parachains_dmp::{Pallet, Call, Storage} = 58,
 		Ump: parachains_ump::{Pallet, Call, Storage, Event} = 59,
@@ -1204,10 +1203,7 @@ pub type SignedExtra = (
 pub type UncheckedExtrinsic =
 	generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 
-pub type Migrations = (
-	pallet_balances::migration::MigrateToTrackInactive<Runtime, xcm_config::CheckAccount>,
-	crowdloan::migration::MigrateToTrackInactive<Runtime>,
-);
+pub type Migrations = ();
 
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
@@ -1232,7 +1228,7 @@ mod benches {
 		// the that path resolves correctly in the generated file.
 		[runtime_common::auctions, Auctions]
 		[runtime_common::crowdloan, Crowdloan]
-		[runtime_common::claims, Claims]
+		// [runtime_common::claims, Claims]
 		[runtime_common::slots, Slots]
 		[runtime_common::paras_registrar, Registrar]
 		[runtime_parachains::configuration, Configuration]
@@ -1244,7 +1240,6 @@ mod benches {
 		[runtime_parachains::ump, Ump]
 		// Substrate
 		[pallet_balances, Balances]
-		[pallet_balances, NisCounterpartBalances]
 		[frame_benchmarking::baseline, Baseline::<Runtime>]
 		[pallet_collective, Council]
 		[pallet_collective, TechnicalCommittee]
@@ -1263,9 +1258,6 @@ mod benches {
 		[pallet_timestamp, Timestamp]
 		[pallet_treasury, Treasury]
 		[pallet_utility, Utility]
-		// XCM
-		[pallet_xcm_benchmarks::fungible, pallet_xcm_benchmarks::fungible::Pallet::<Runtime>]
-		[pallet_xcm_benchmarks::generic, pallet_xcm_benchmarks::generic::Pallet::<Runtime>]
 	);
 }
 
@@ -1411,7 +1403,7 @@ sp_api::impl_runtime_apis! {
 
 		fn submit_pvf_check_statement(
 			stmt: primitives::v2::PvfCheckStatement,
-			signature: primitives::v2::ValidatorSignature
+			signature: primitives::v2::ValidatorSignature,
 		) {
 			parachains_runtime_api_impl::submit_pvf_check_statement::<Runtime>(stmt, signature)
 		}
@@ -1425,7 +1417,6 @@ sp_api::impl_runtime_apis! {
 		{
 			parachains_runtime_api_impl::validation_code_hash::<Runtime>(para_id, assumption)
 		}
-
 	}
 
 	impl beefy_primitives::BeefyApi<Block> for Runtime {
@@ -1507,7 +1498,7 @@ sp_api::impl_runtime_apis! {
 			let epoch_config = Babe::epoch_config().unwrap_or(BABE_GENESIS_EPOCH_CONFIG);
 			babe_primitives::BabeConfiguration {
 				slot_duration: Babe::slot_duration(),
-				epoch_length: EpochDuration::get().into(),
+				epoch_length: EpochDuration::get(),
 				c: epoch_config.c,
 				authorities: Babe::authorities().to_vec(),
 				randomness: Babe::randomness(),
@@ -1598,26 +1589,6 @@ sp_api::impl_runtime_apis! {
 		}
 	}
 
-	#[cfg(feature = "try-runtime")]
-	impl frame_try_runtime::TryRuntime<Block> for Runtime {
-		fn on_runtime_upgrade() -> (Weight, Weight) {
-			log::info!("try-runtime::on_runtime_upgrade cord.");
-			let weight = Executive::try_runtime_upgrade().unwrap();
-			(weight, BlockWeights::get().max_block)
-		}
-
-		fn execute_block(block: Block, state_root_check: bool, select: frame_try_runtime::TryStateSelect) -> Weight {
-			log::info!(
-				target: "runtime::cord", "try-runtime: executing block #{} ({:?}) / root checks: {:?} / sanity-checks: {:?}",
-				block.header.number,
-				block.header.hash(),
-				state_root_check,
-				select,
-			);
-			Executive::try_execute_block(block, state_root_check, select).expect("try_execute_block failed")
-		}
-	}
-
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn benchmark_metadata(extra: bool) -> (
@@ -1627,10 +1598,6 @@ sp_api::impl_runtime_apis! {
 			use frame_benchmarking::{Benchmarking, BenchmarkList};
 			use frame_support::traits::StorageInfoTrait;
 
-			use pallet_session_benchmarking::Pallet as SessionBench;
-			use pallet_offences_benchmarking::Pallet as OffencesBench;
-			use pallet_election_provider_support_benchmarking::Pallet as ElectionProviderBench;
-			use pallet_nomination_pools_benchmarking::Pallet as NominationPoolsBench;
 			use frame_system_benchmarking::Pallet as SystemBench;
 			use frame_benchmarking::baseline::Pallet as Baseline;
 
@@ -1648,21 +1615,13 @@ sp_api::impl_runtime_apis! {
 			sp_runtime::RuntimeString,
 		> {
 			use frame_benchmarking::{Benchmarking, BenchmarkBatch, TrackedStorageKey};
-			// Trying to add benchmarks directly to some pallets caused cyclic dependency issues.
-			// To get around that, we separated the benchmarks into its own crate.
-			use pallet_session_benchmarking::Pallet as SessionBench;
-			use pallet_offences_benchmarking::Pallet as OffencesBench;
-			use pallet_election_provider_support_benchmarking::Pallet as ElectionProviderBench;
-			use pallet_nomination_pools_benchmarking::Pallet as NominationPoolsBench;
 			use frame_system_benchmarking::Pallet as SystemBench;
 			use frame_benchmarking::baseline::Pallet as Baseline;
 
-			impl pallet_session_benchmarking::Config for Runtime {}
-			impl pallet_offences_benchmarking::Config for Runtime {}
-			impl pallet_election_provider_support_benchmarking::Config for Runtime {}
+
 			impl frame_system_benchmarking::Config for Runtime {}
 			impl frame_benchmarking::baseline::Config for Runtime {}
-			impl pallet_nomination_pools_benchmarking::Config for Runtime {}
+			// impl pallet_nomination_pools_benchmarking::Config for Runtime {}
 
 			let whitelist: Vec<TrackedStorageKey> = vec![
 				// Block Number
