@@ -38,7 +38,10 @@ members = [
 	"runtime/constants",
 	"node/client",
 	"node/service",
+	"node/test/client",
+	"node/test/service",
 	"node/test/performance-test",
+
 ]
 
 [badges]

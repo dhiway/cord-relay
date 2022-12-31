@@ -122,7 +122,7 @@ polkadot-node-core-runtime-api = { git = "https://github.com/paritytech/polkadot
 polkadot-statement-distribution = { git = "https://github.com/paritytech/polkadot", branch = "master", optional = true }
 
 [dev-dependencies]
-polkadot-test-client = { git = "https://github.com/paritytech/polkadot", branch = "master" }
+polkadot-test-client = { path = "../test/client" }
 polkadot-node-subsystem-test-helpers = { git = "https://github.com/paritytech/polkadot", branch = "master" }
 env_logger = "0.9.0"
 log = "0.4.17"
